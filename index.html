@@ -1,0 +1,21 @@
+<h1>
+Test!
+</h1>
+
+<script id="template" type="text/template">
+<div class="tutorial">
+	<h1 class="tutorial-heading">{{title}}<h1>
+</div>
+</script>
+
+
+<script>
+var data = {
+    title: "Constructing HTML Elements"
+}
+
+var template = $("#template").html();
+
+var html = Mustache.render(template, data);
+$("body").append(html);
+</script>
