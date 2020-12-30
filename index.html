@@ -1,21 +1,29 @@
 <h1>
-Test!
+Test 2!
 </h1>
-
-<script id="template" type="text/template">
-<div class="tutorial">
-	<h1 class="tutorial-heading">{{title}}<h1>
-</div>
-</script>
-
+<div id=”bookmarks”></div>
 
 <script>
-var data = {
-    title: "Constructing HTML Elements"
-}
 
-var template = $("#template").html();
+	const bookmarks = [];
+	const childElement, appendChildElement, parentElement;
+	
+	bookmarks.push({ url: 'https://facebook.com' });
+	bookmarks.push({ url: 'https://instagram.com' });
+	bookmarks.push({ url: 'https://twitter.com' });
+	// Outputs
+	[
+	  {"url":"https://facebook.com"},
+	  {"url":"https://instagram.com"},
+	  {"url":"https://twitter.com"}
+	]
+	
+	parentElement = document.getElementById('bookmarks');
+	for (let bookmark of bookmarks) {
+	  childElement = document.createElement('div');
+	  appendChildElement = parentElement.appendChild(childElement)
+	  appendChildElement.innerHTML = bookmark.url
+	}
 
-var html = Mustache.render(template, data);
-$("body").append(html);
+
 </script>
