@@ -1,12 +1,12 @@
 <h1>
 Test 2!
 </h1>
-<div id='bookmarks'></div>
+<div id='test'></div>
 
 <script>
 
 	const bookmarks = [];
-	var childElement, appendChildElement, parentElement;
+	var childElement, appendChildElement;
 	
 	bookmarks.push({ url: 'https://facebook.com' });
 	bookmarks.push({ url: 'https://instagram.com' });
@@ -18,7 +18,7 @@ Test 2!
 	  {"url":"https://twitter.com"}
 	]
 	
-	parentElement = document.getElementById('bookmarks');
+	var parentElement = document.getElementById('test');
 	for (let bookmark of bookmarks) {
 	  childElement = document.createElement('div');
 	  appendChildElement = parentElement.appendChild(childElement)
