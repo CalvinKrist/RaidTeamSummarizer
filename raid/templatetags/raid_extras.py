@@ -8,4 +8,7 @@ def get_raid_val(value, *args):
 	difficulty = args[1]
 	metric = args[2]
 	statistic = args[3]
-	return value[difficulty][metric][boss][statistic]
+	try:
+		return value[difficulty][metric][boss][statistic]
+	except:
+		return "None"
