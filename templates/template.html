@@ -1,0 +1,70 @@
+{% csrf_token %}
+{% load raid_extras %}
+
+<!-- Difficulty Dropdown -->
+<label>Difficulty:</label>
+<form method="post" novalidate>
+{% csrf_token %}
+<select id="difficulty" name="difficulty" onchange="this.form.submit()">
+	<option value="heroic">Heroic</option>
+	<option value="normal">Normal</option>
+</select>
+</form>
+
+
+<!-- Metric Dropdown -->
+<label>Metric:</label>
+<form method="post" novalidate>
+{% csrf_token %}
+<select id="metric" name="metric" onchange="this.form.submit()">
+	<option value="dps">Damage</option>
+	<option value="hps">Healing</option>
+</select>
+</form>
+
+<!-- Statistic Dropdown -->
+<label>Statistic:</label>
+<form method="post" novalidate>
+{% csrf_token %}
+<select id="statistic" name="statistic" onchange="this.form.submit()">
+	<option value="max">Maximum</option>
+	<option value="med">Median</option>
+</select>
+</form>
+
+<!-- Update Dropdowns -->
+<script>
+function selectElement(id, valueToSelect) {    
+    let element = document.getElementById(id);
+    element.value = valueToSelect;
+}
+selectElement('difficulty', "{{difficulty}}")
+selectElement('metric', "{{metric}}")
+selectElement('statistic', "{{statistic}}")
+</script>
+
+<table>
+	<thead>
+	<tr><th></th>
+	
+	{% for boss in bosses %}
+	<th>{{boss}}</th>
+	{% endfor %}
+	
+	<tr>
+	</thead>
+	{% for raider in raiders %}
+		<tr>
+		<th>{{raider.name}}</th>
+		{% for boss in bosses %}
+		<th>
+		{% get_raid_val raider boss difficulty metric statistic %}
+		</th>
+		{% endfor %}
+		</tr>
+	{% endfor %}
+	<tbody>
+	
+	</tbody>
+
+</table>
