@@ -54,6 +54,7 @@ selectElement('statistic', "{{statistic}}")
 	<tr>
 	</thead>
 	{% for raider in raiders %}
+	{% if difficulty == "normal" and raider.n_include or difficulty == "heroic" and raider.h_include %}
 		<tr>
 		<th>{{raider.name}}</th>
 		{% for boss in bosses %}
@@ -62,6 +63,7 @@ selectElement('statistic', "{{statistic}}")
 		</th>
 		{% endfor %}
 		</tr>
+	{% endif %}
 	{% endfor %}
 	<tbody>
 	
