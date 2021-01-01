@@ -21,8 +21,7 @@ def get_player_data(name, metric):
 	if r.status_code != 200:
 		print("ERROR")
 		print(r.text)
-		global state
-		state = LOADED
+		return -1
 	
 	results_heroic = {}
 	results_normal = {}
@@ -122,6 +121,12 @@ def load_background_data():
 		raider["name"] = member["name"]
 		summary = get_player_data(member["name"], "dps")
 		healing = get_player_data(member["name"], "hps")
+		if summary == -1 or healing == -1:
+			with open('data.txt') as json_file:
+				args = json.load(json_file)
+			print("Background data loaded from cache.")
+			state = LOADED
+			return 
 
 		raider["n_include"] = False
 		raider["h_include"] = False
@@ -171,6 +176,9 @@ def load_background_data():
 		
 	print("Background data loaded.")
 	state = LOADED
+	
+	with open('data.txt', 'w') as outfile:
+		json.dump(args, outfile)
 
 def load_data():	
 	global args
