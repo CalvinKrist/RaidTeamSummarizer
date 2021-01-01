@@ -91,7 +91,7 @@ def parse_to_col(parse):
 		return "bad"
 	return "horrible"
 
-def load_background_data():
+def load_background_data(download):
 	global state
 	global args
 	state = LOADING
@@ -121,7 +121,7 @@ def load_background_data():
 		raider["name"] = member["name"]
 		summary = get_player_data(member["name"], "dps")
 		healing = get_player_data(member["name"], "hps")
-		if summary == -1 or healing == -1:
+		if not download or summary == -1 or healing == -1:
 			with open('data.txt') as json_file:
 				args = json.load(json_file)
 			print("Background data loaded from cache.")
@@ -230,7 +230,7 @@ def load_background_data():
 	with open('data.txt', 'w') as outfile:
 		json.dump(args, outfile)
 
-def load_data():	
+def load_data(download=False):	
 	global args
 	global state
 	state = NOT_LOADED
@@ -239,7 +239,7 @@ def load_data():
 	args["metric"] = "dps"
 	args["statistic"] = "max"
 	
-	t = threading.Thread(target=load_background_data )
+	t = threading.Thread(target=load_background_data, args=(download,))
 	t.start()
 	
 def post(request):
@@ -255,8 +255,9 @@ def post(request):
 	if "statistic" in request.POST:
 		args["statistic"] = request.POST["statistic"]
 	if "refresh" in str(request.body):
-		state = NOT_LOADED
-		load_data()
+		if state != NOT_LOADED:
+			state = NOT_LOADED
+			load_data(download=True)
 		
 	return render(request, 'template.html', args)
 	

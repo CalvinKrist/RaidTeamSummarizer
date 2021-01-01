@@ -20,7 +20,6 @@ def get_raid_color(value, *args):
 	statistic = args[2]
 	try:
 		if statistic == "max":
-			print(value[difficulty][metric]["max_col"])
 			return value[difficulty][metric]["max_col"]
 		if statistic == "med":
 			return value[difficulty][metric]["med_col"]
