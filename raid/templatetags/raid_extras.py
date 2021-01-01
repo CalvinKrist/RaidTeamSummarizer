@@ -1,6 +1,9 @@
 from django import template
 
 register = template.Library()
+
+L = [8, 45]
+none = " - "
 	
 @register.simple_tag
 def get_raid_val(value, *args):
@@ -8,10 +11,12 @@ def get_raid_val(value, *args):
 	difficulty = args[1]
 	metric = args[2]
 	statistic = args[3]
+	
 	try:
-		return value[difficulty][metric][boss][statistic]
+		val = value[difficulty][metric][boss][statistic]
+		return f'{val:02}'
 	except:
-		return "None"
+		return none
 		
 @register.simple_tag
 def get_raid_color(value, *args):
@@ -25,7 +30,7 @@ def get_raid_color(value, *args):
 			return value[difficulty][metric]["med_col"]
 		return ""
 	except:
-		return "None"
+		return none
 		
 @register.simple_tag
 def get_raid_avg(value, *args):
@@ -34,12 +39,14 @@ def get_raid_avg(value, *args):
 	statistic = args[2]
 	try:
 		if statistic == "max":
-			return (int)(value[difficulty][metric]["max_avg"] + 0.5)
+			val = (int)(value[difficulty][metric]["max_avg"] + 0.5)
+			return f'{val:02}'
 		if statistic == "med":
-			return (int)(value[difficulty][metric]["med_avg"] + 0.5)
+			val = (int)(value[difficulty][metric]["med_avg"] + 0.5)
+			return f'{val:02}'
 		return ""
 	except:
-		return "None"
+		return none
 		
 @register.simple_tag
 def get_raid_avg_2(value, *args):
@@ -48,6 +55,7 @@ def get_raid_avg_2(value, *args):
 	metric = args[2]
 	statistic = args[3]
 	try:
-		return value[difficulty][metric][boss][statistic]
+		val = value[difficulty][metric][boss][statistic]
+		return f'{val:02}'
 	except:
-		return "None"
+		return none

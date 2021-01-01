@@ -51,7 +51,7 @@
 				<th>Name</th>
 				
 				{% for boss in bosses %}
-					<th scope="col">{{boss}}</th>
+					<th scope="col" class="text-center">{{boss}}</th>
 				{% endfor %}
 				<th scope="col">Average</th>
 
@@ -64,11 +64,11 @@
 					<tr id={% get_raid_color raider difficulty metric statistic %}>
 						<td scope="row">{{raider.name}}</td>
 						{% for boss in bosses %}
-							<td>
+							<td class="text-center">
 							{% get_raid_val raider boss difficulty metric statistic %}
 							</td>
 						{% endfor %}
-						<td>
+						<td class="text-center">
 						{% get_raid_avg raider difficulty metric statistic %}
 						</td>
 					</tr>
@@ -79,7 +79,7 @@
 			<tr class="thead-light">
 				<td scope="col">AVERAGE</td>
 				{% for boss in bosses %}
-					<td scope="col">{% get_raid_avg_2 average boss difficulty metric statistic %}</td>
+					<td scope="col" class="text-center">{% get_raid_avg_2 average boss difficulty metric statistic %}</td>
 				{% endfor %}
 				<td scope="col"></td>
 			</tr>
