@@ -1,72 +1,161 @@
 {% csrf_token %}
 {% load raid_extras %}
 
-<!-- Difficulty Dropdown -->
-<label>Difficulty:</label>
-<form method="post" novalidate>
-{% csrf_token %}
-<select id="difficulty" name="difficulty" onchange="this.form.submit()">
-	<option value="heroic">Heroic</option>
-	<option value="normal">Normal</option>
-</select>
-</form>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
 
-
-<!-- Metric Dropdown -->
-<label>Metric:</label>
-<form method="post" novalidate>
-{% csrf_token %}
-<select id="metric" name="metric" onchange="this.form.submit()">
-	<option value="dps">Damage</option>
-	<option value="hps">Healing</option>
-</select>
-</form>
-
-<!-- Statistic Dropdown -->
-<label>Statistic:</label>
-<form method="post" novalidate>
-{% csrf_token %}
-<select id="statistic" name="statistic" onchange="this.form.submit()">
-	<option value="max">Maximum</option>
-	<option value="med">Median</option>
-</select>
-</form>
-
-<!-- Update Dropdowns -->
-<script>
-function selectElement(id, valueToSelect) {    
-    let element = document.getElementById(id);
-    element.value = valueToSelect;
+<style>
+.top {
+  background-color: rgb(230, 204, 128);
 }
-selectElement('difficulty', "{{difficulty}}")
-selectElement('metric', "{{metric}}")
-selectElement('statistic', "{{statistic}}")
-</script>
+.excellent {
+  background-color: rgb(255, 128, 0);
+}
+.great {
+  background-color: rgb(163, 53, 238, 0.8);
+}
+.okay {
+  background-color: rgb(0, 112, 221, 0.8);
+}
+.bad {
+  background-color: rgb(30, 255, 0, 0.5);
+}
+.horrible {
+  background-color: rgb(157, 157, 157);
+}
+</style>
 
-<table>
-	<thead>
-	<tr><th></th>
+<div class="container-fluid mt-3 w-75">
+	<div class="row mx justify-content-center">
+		<!-- Difficulty Dropdown -->
+		<label class="mx-2">Difficulty:</label>
+		<form method="post" novalidate>
+			{% csrf_token %}
+			<select id="difficulty" name="difficulty" onchange="this.form.submit()">
+				<option value="heroic">Heroic</option>
+				<option value="normal">Normal</option>
+			</select>
+		</form>
+
+
+		<!-- Metric Dropdown -->
+		<label class="mx-2">Metric:</label>
+		<form method="post" novalidate>
+			{% csrf_token %}
+			<select id="metric" name="metric" onchange="this.form.submit()">
+				<option value="dps">Damage</option>
+				<option value="hps">Healing</option>
+			</select>
+		</form>
+
+		<!-- Statistic Dropdown -->
+		<label class="mx-2">Statistic:</label>
+		<form method="post" novalidate>
+			{% csrf_token %}
+			<select id="statistic" name="statistic" onchange="this.form.submit()">
+				<option value="max">Maximum</option>
+				<option value="med">Median</option>
+			</select>
+		</form>
+		
+		<button type="button" class="btn mx-2 btn-secondary" onclick="refreshData()">Refresh Data</button>
+	</div>
 	
-	{% for boss in bosses %}
-	<th>{{boss}}</th>
-	{% endfor %}
-	
-	<tr>
-	</thead>
-	{% for raider in raiders %}
-	{% if difficulty == "normal" and raider.n_include or difficulty == "heroic" and raider.h_include %}
-		<tr>
-		<th>{{raider.name}}</th>
+	<br/>
+
+	<table class="table table-sm" class="w-100">
+		<thead class="thead-dark">
+		<tr><th></th>
+		
 		{% for boss in bosses %}
-		<th>
-		{% get_raid_val raider boss difficulty metric statistic %}
-		</th>
+		<th scope="col">{{boss}}</th>
 		{% endfor %}
-		</tr>
-	{% endif %}
-	{% endfor %}
-	<tbody>
-	
-	</tbody>
+		<th scope="col">Average</th>
+		
+		<tr>
+		</thead>
+		<tbody>
+			{% for raider in raiders %}
+			{% if difficulty == "normal" and raider.n_include or difficulty == "heroic" and raider.h_include %}
+				<tr class={% get_raid_color raider difficulty metric statistic %}>
+				<th scope="row">{{raider.name}}</th>
+				{% for boss in bosses %}
+					<td>
+					{% get_raid_val raider boss difficulty metric statistic %}
+					</td>
+				{% endfor %}
+				<td>
+				{% get_raid_avg raider difficulty metric statistic %}
+				</td>
+				</tr>
+			{% endif %}
+			{% endfor %}
+		</tbody>
 
-</table>
+	</table>
+</div>
+
+<script>
+	function sleep(ms) {
+		return new Promise(resolve => setTimeout(resolve, ms));
+	}
+	async function waitUntilLoaded() {
+		var done = false
+		while(!done) {
+			var xhr = new XMLHttpRequest();
+			xhr.open("GET", "/done", true);
+			xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+			xhr.onreadystatechange = function () {
+				if (xhr.readyState === 4 && xhr.status === 200) {
+					var json = JSON.parse(xhr.responseText);
+					done = json['done']
+				}
+			};
+			xhr.send();
+			await sleep(2000);
+		}
+	}
+	
+	async function loadData() {
+		var xhr = new XMLHttpRequest();
+		xhr.open("GET", "/done", true);
+		xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+		xhr.onreadystatechange = async function () {
+			if (xhr.readyState === 4 && xhr.status === 200) {
+				var json = JSON.parse(xhr.responseText);
+				done = json['done']
+				if(!done) {
+					await waitUntilLoaded();
+		
+					location.reload();
+				}
+			}
+		};
+		xhr.send();
+	}
+	
+	loadData();
+	
+	function refreshData() {
+		var xhr = new XMLHttpRequest();
+		xhr.open("POST", "/", true);
+		xhr.setRequestHeader("Content-Type", "application/json");
+		var data = JSON.stringify({"refresh": true});
+
+		xhr.send(data);
+		
+		location.reload();
+		loadData();
+	}
+	
+	// Update dropdowns
+	function selectElement(id, valueToSelect) {    
+		let element = document.getElementById(id);
+		element.value = valueToSelect;
+	}
+	selectElement('difficulty', "{{difficulty}}")
+	selectElement('metric', "{{metric}}")
+	selectElement('statistic', "{{statistic}}")
+</script>

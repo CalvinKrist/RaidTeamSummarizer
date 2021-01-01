@@ -3,13 +3,26 @@ from django.http import HttpResponse
 import requests 
 from bs4 import BeautifulSoup
 import json
+import threading
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
 
 guild = '431699'
+NOT_LOADED = 0
+LOADING = 1
+LOADED = 2
+state = NOT_LOADED
 	
 def get_player_data(name, metric):
 	URL = "https://www.warcraftlogs.com/v1/parses/character/" + name + "/Malganis/US?metric=" + metric + "&timeframe=historical&api_key=0993517430a99ecb7e93c9ab6441b1b6"
 	r = requests.get(url = URL)
 	info = json.loads(r.text)
+	
+	if r.status_code != 200:
+		print("ERROR")
+		print(r.text)
+		global state
+		state = LOADED
 	
 	results_heroic = {}
 	results_normal = {}
@@ -64,15 +77,34 @@ def get_player_data(name, metric):
 	return {"heroic" : final_heroic, "normal" : final_normal}
 
 args = {}
+bosses = ["Shriekwing", "Huntsman Altimor", "Hungering Destroyer", "Sun King's Salvation", "Artificer Xy'mox", "Lady Inerva Darkvein", "The Council of Blood", "Sludgefist", "Stone Legion Generals", "Sire Denathrius"]
 
-def load_data():
+def parse_to_col(parse):
+	if parse > 99:
+		return "top"
+	if parse >= 95:
+		return "excellent"
+	if parse >= 75:
+		return "great"
+	if parse >= 50:
+		return "okay"
+	if parse >= 25:
+		return "bad"
+	return "horrible"
+
+def load_background_data():
+	global state
+	global args
+	state = LOADING
+	print("Loading background data.")
+	
 	URL = "https://www.warcraftlogs.com/guild/characters/" + guild + "/"
 	
 	r = requests.get(url = URL)
 	soup = BeautifulSoup(r.text, 'html.parser')
 	
 	raid_team = []
-	
+
 	# Get a list of raid members
 	for raid_member in soup.find_all('tr'):
 		member = {}
@@ -84,11 +116,7 @@ def load_data():
 				
 		if "name" in member:
 			raid_team.append(member)
-		
-	bosses = ["Shriekwing", "Huntsman Altimor", "Hungering Destroyer", "Sun King's Salvation", "Artificer Xy'mox", "Lady Inerva Darkvein", "The Council of Blood", "Sludgefist", "Stone Legion Generals", "Sire Denathrius"]
 	
-	global args
-	args = {"raiders" : [], "bosses":bosses}
 	for member in raid_team:
 		raider = {}
 		raider["name"] = member["name"]
@@ -117,12 +145,49 @@ def load_data():
 		
 		args["raiders"].append(raider)
 		
+		
+	for raider in args["raiders"]:
+		diffs = [raider["heroic"], raider["normal"]]
+		for diff in diffs:
+			modes = [diff["dps"], diff["hps"]]
+			for mode in modes:
+				med_sum = 0
+				max_sum = 0
+				count = 0
+				for boss, res in mode.items():
+					if res["med"] != None:
+						med_sum += res["med"]
+						count += 1
+						max_sum += res["max"]
+				med_avg = 0
+				max_avg = 0
+				if count > 0:
+					med_avg = med_sum / count
+					max_avg = max_sum / count
+				mode["max_avg"] = max_avg
+				mode["med_avg"] = med_avg
+				mode["max_col"] = parse_to_col(max_avg)
+				mode["med_col"] = parse_to_col(med_avg)
+		
+	print("Background data loaded.")
+	state = LOADED
+
+def load_data():	
+	global args
+	global state
+	state = NOT_LOADED
+	args = {"raiders" : [], "bosses":bosses}
 	args["difficulty"] = "heroic"
 	args["metric"] = "dps"
 	args["statistic"] = "max"
-
+	
+	t = threading.Thread(target=load_background_data )
+	t.start()
+	
 def post(request):
-	if len(args.keys()) == 0:
+	global state
+	global args
+	if state == NOT_LOADED:
 		load_data()
 		
 	if "difficulty" in request.POST:
@@ -131,17 +196,31 @@ def post(request):
 		args["metric"] = request.POST["metric"]
 	if "statistic" in request.POST:
 		args["statistic"] = request.POST["statistic"]
+	if "refresh" in str(request.body):
+		state = NOT_LOADED
+		load_data()
 		
 	return render(request, 'template.html', args)
 	
 def get(request):
-	if len(args.keys()) == 0:
+	if state == NOT_LOADED:
 		load_data()
+		
+	global args
 	return render(request, 'template.html', args)
 
+@csrf_exempt
 def index(request):
 	if request.method == 'POST':
 		return post(request)
 	if request.method == 'GET':
 		return get(request)
 	
+@csrf_exempt
+def done(request):
+	global state
+	print(state)
+	data = {
+        'done': state==LOADED
+    }
+	return JsonResponse(data)
