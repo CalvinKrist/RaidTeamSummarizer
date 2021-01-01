@@ -40,3 +40,14 @@ def get_raid_avg(value, *args):
 		return ""
 	except:
 		return "None"
+		
+@register.simple_tag
+def get_raid_avg_2(value, *args):
+	boss = args[0]
+	difficulty = args[1]
+	metric = args[2]
+	statistic = args[3]
+	try:
+		return value[difficulty][metric][boss][statistic]
+	except:
+		return "None"

@@ -126,6 +126,7 @@ def load_background_data():
 				args = json.load(json_file)
 			print("Background data loaded from cache.")
 			state = LOADED
+			
 			return 
 
 		raider["n_include"] = False
@@ -173,6 +174,55 @@ def load_background_data():
 				mode["med_avg"] = med_avg
 				mode["max_col"] = parse_to_col(max_avg)
 				mode["med_col"] = parse_to_col(med_avg)
+				
+	# Calculate Averages
+	raider = {}
+	raider["name"] = "Average"
+	raider["n_include"] = True
+	raider["h_include"] = True
+	
+	stats = ["max", "med"]
+	metrics = ["dps", "hps"]
+	modes = ["heroic", "normal"]
+	boss_avg = {}
+	for boss in bosses:
+		boss_avg[boss] = {}
+		for metric in metrics:
+			boss_avg[boss][metric] = {}
+			for mode in modes:
+				boss_avg[boss][metric][mode] = {}
+				for stat in stats:
+					boss_avg[boss][metric][mode][stat] = {"sum" : 0, "count" : 0}
+					
+	for boss in bosses:
+		for raid_member in args["raiders"]:
+			modes = []
+			if raid_member["n_include"]:
+				modes.append("normal")
+			if raid_member["h_include"]:
+				modes.append("heroic")
+			for metric in metrics:
+				for mode in modes:
+					for stat in stats:
+						if boss in raid_member[mode][metric]:
+							if raid_member[mode][metric][boss][stat] != None:
+								boss_avg[boss][metric][mode][stat]["sum"] += raid_member[mode][metric][boss][stat]
+								boss_avg[boss][metric][mode][stat]["count"] += 1
+						
+	modes = ["heroic", "normal"]
+	for mode in modes:
+		raider[mode] = {}
+		for metric in metrics:
+			raider[mode][metric] = {}
+			for boss in bosses:
+				raider[mode][metric][boss] = {}
+				for stat in stats:
+					if boss_avg[boss][metric][mode][stat]["count"] == 0:
+						raider[mode][metric][boss][stat] = None
+					else:
+						raider[mode][metric][boss][stat] = (int)(boss_avg[boss][metric][mode][stat]["sum"] / boss_avg[boss][metric][mode][stat]["count"] + 0.5)
+	
+	args["average"] = raider
 		
 	print("Background data loaded.")
 	state = LOADED

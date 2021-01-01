@@ -91,6 +91,14 @@
 				</tr>
 			{% endif %}
 			{% endfor %}
+			
+			<tr class="thead-light">
+				<th scope="col">AVERAGE</th>
+				{% for boss in bosses %}
+					<th scope="col">{% get_raid_avg_2 average boss difficulty metric statistic %}</th>
+				{% endfor %}
+				<th scope="col"></th>
+			<tr>
 		</tbody>
 
 	</table>
@@ -98,6 +106,7 @@
 	<div class="row mx justify-content-center">
 		<button type="button" class="btn mx-2 btn-secondary" onclick="refreshData()">Refresh Data</button>
 	</div>
+	<br>
 </div>
 
 <script>
